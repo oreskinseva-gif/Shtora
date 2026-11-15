@@ -1,0 +1,68 @@
+name: Build Shtora
+
+# Запускается при любом изменении в репозитории и вручную из вкладки Actions.
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Скачать содержимое репозитория
+        uses: actions/checkout@v4
+
+      - name: Установить Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Установить Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.12'
+
+      - name: Подготовить исходники
+        run: |
+          mkdir -p proj
+          if [ -f shtora-source.zip ]; then
+            echo "Нашёл shtora-source.zip — распаковываю"
+            unzip -o shtora-source.zip -d proj
+          else
+            echo "Zip нет — беру файлы из корня репозитория"
+            tar --exclude=.git --exclude=./proj --exclude=./dist -cf - . | (cd proj && tar -xf -)
+          fi
+          if [ ! -f proj/build.gradle ]; then
+            echo "::error::Не найден build.gradle. Загрузи shtora-source.zip в корень репозитория."
+            exit 1
+          fi
+
+      - name: Собрать мод
+        working-directory: proj
+        run: gradle build --no-daemon --stacktrace
+
+      - name: Отобрать нужный .jar
+        run: |
+          mkdir -p dist
+          cp proj/build/libs/*.jar dist/ 2>/dev/null || true
+          rm -f dist/*-dev.jar dist/*-sources.jar
+          echo "Готовые файлы:"
+          ls -la dist
+
+      - name: Выложить .jar в артефакты
+        uses: actions/upload-artifact@v4
+        with:
+          name: shtora-jar
+          path: dist/*.jar
+          if-no-files-found: error
+
+      - name: Приложить .jar к релизу (только для тегов v*)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.jar
