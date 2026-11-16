@@ -1,0 +1,56 @@
+plugins {
+    id 'fabric-loom' version '1.9.2'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+// ---------------------------------------------------------------------------
+// Запекание буквы S из готического шрифта (deathnote.ttf) в картинку logo_s.png.
+// Делается во время сборки, поэтому буква гарантированно гладкая даже там,
+// где в JRE нет java.desktop. Если не получилось — сборка не падает,
+// буква будет отрисована в игре.
+// ---------------------------------------------------------------------------
+tasks.register('bakeS') {
+    description = 'Рисует букву S из шрифта в PNG'
+    def ttf = file('src/main/resources/assets/shtora/font/deathnote.ttf')
+    def srcFile = file('RenderS.java')
+    def outDir = file('src/main/resources/assets/shtora/textures/gui')
+    def outPng = new File(outDir, 'logo_s.png')
+    def outWord = new File(outDir, 'logo_word.png')
+    inputs.files(ttf, srcFile)
+    outputs.files(outPng, outWord)
+    doLast {
+        outDir.mkdirs()
+        try {
+            def javaBin = new File(System.getProperty('java.home'), 'bin/java').absolutePath
+            def pb = new ProcessBuilder(javaBin, srcFile.absolutePath, ttf.absolutePath, outDir.absolutePath)
+            pb.inheritIO()
+            if (pb.start().waitFor() != 0) throw new RuntimeException('RenderS завершился с ошибкой')
+        } catch (Exception e) {
+            logger.lifecycle("Буква S не запечена (${e.message}) — отрисуется в игре")
+        }
+    }
+}
+
+tasks.named('processResources') { dependsOn 'bakeS' }
