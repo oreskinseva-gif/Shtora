@@ -2,6 +2,7 @@ package com.shtora.client;
 
 import com.shtora.client.gui.ClickGuiScreen;
 import com.shtora.client.gui.FogOverlay;
+import com.shtora.client.keybind.ShtoraKeys;
 import com.shtora.client.gui.Hud;
 import com.shtora.client.util.Projection;
 import net.fabricmc.api.ClientModInitializer;
@@ -21,6 +22,7 @@ public class ShtoraClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        ShtoraKeys.register();
         ModuleManager.init();
 
         // экранный диктор клиенту не нужен: держим его выключенным
@@ -84,14 +86,11 @@ public class ShtoraClient implements ClientModInitializer {
         } catch (Throwable ignored) {}
     }
 
-    /** Клавиша открытия меню берётся из Interface → Menu key. */
+    /** Клавиша открытия меню берётся из Настройки → Управление → Shtora. */
     private static void menuKey(MinecraftClient mc) {
         if (mc.currentScreen != null) { menuWasDown = true; return; }
-        int key = GLFW.GLFW_KEY_RIGHT_SHIFT;
-        try {
-            if (ModuleManager.ui != null) key = ModuleManager.ui.menuKey.get();
-        } catch (Throwable ignored) {}
-        if (key <= 0) key = GLFW.GLFW_KEY_RIGHT_SHIFT;
+        int key = ShtoraKeys.menuCode();
+        if (key <= 0) key = GLFW.GLFW_KEY_U;
         boolean down = InputUtil.isKeyPressed(mc.getWindow().getHandle(), key);
         if (down && !menuWasDown) mc.setScreen(new ClickGuiScreen());
         menuWasDown = down;
