@@ -3,6 +3,8 @@ package com.shtora.client.util;
 import com.shtora.client.Module;
 import com.shtora.client.ModuleManager;
 import com.shtora.client.setting.BoolSetting;
+import com.shtora.client.setting.ColorSetting;
+import com.shtora.client.setting.KeybindSetting;
 import com.shtora.client.setting.ModeSetting;
 import com.shtora.client.setting.NumberSetting;
 import com.shtora.client.setting.Setting;
@@ -83,6 +85,8 @@ public final class ConfigManager {
                 if (st instanceof BoolSetting b) v = b.get() ? "true" : "false";
                 else if (st instanceof NumberSetting n) v = String.valueOf(n.get());
                 else if (st instanceof ModeSetting mo) v = String.valueOf(mo.index());
+                else if (st instanceof ColorSetting cs) v = cs.serialize();
+                else if (st instanceof KeybindSetting ks) v = String.valueOf(ks.get());
                 else continue;
                 sb.append("m.").append(m.name).append('.').append(i).append('=').append(v).append('\n');
             }
@@ -142,6 +146,10 @@ public final class ConfigManager {
                 n.set(Double.parseDouble(val));
             } else if (s instanceof ModeSetting mo) {
                 mo.set(Integer.parseInt(val));
+            } else if (s instanceof ColorSetting cs) {
+                cs.deserialize(val);
+            } else if (s instanceof KeybindSetting ks) {
+                ks.set(Integer.parseInt(val));
             }
         } catch (NumberFormatException ignored) {
         }

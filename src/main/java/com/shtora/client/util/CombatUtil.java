@@ -20,13 +20,32 @@ public final class CombatUtil {
         return false;
     }
 
+    /** Как {@link #isValid}, но с учётом AntiBot: боты-игроки отсеиваются. */
+    public static boolean isValidTarget(MinecraftClient mc, Entity e, boolean players, boolean mobs, boolean animals) {
+        if (!isValid(mc, e, players, mobs, animals)) return false;
+        return !AntiBotUtil.isBot(mc, e);
+    }
+
     /** Ближайшая подходящая цель в радиусе и в поле зрения (fov — градусы). */
     public static LivingEntity findTarget(MinecraftClient mc, double range, float fov,
                                           boolean players, boolean mobs, boolean animals, boolean walls) {
+        return findTarget(mc, range, fov, players, mobs, animals, walls, false);
+    }
+
+    /**
+     * То же, что {@link #findTarget(MinecraftClient, double, float, boolean, boolean, boolean, boolean)},
+     * но при antiBot=true цели-боты (NPC) игнорируются.
+     */
+    public static LivingEntity findTarget(MinecraftClient mc, double range, float fov,
+                                          boolean players, boolean mobs, boolean animals, boolean walls,
+                                          boolean antiBot) {
         LivingEntity best = null;
         double bestDist = Double.MAX_VALUE;
         for (Entity e : mc.world.getEntities()) {
-            if (!isValid(mc, e, players, mobs, animals)) continue;
+            boolean ok = antiBot
+                    ? isValidTarget(mc, e, players, mobs, animals)
+                    : isValid(mc, e, players, mobs, animals);
+            if (!ok) continue;
             double dist = mc.player.distanceTo(e);
             if (dist > range || dist >= bestDist) continue;
             if (!walls && !mc.player.canSee(e)) continue;
@@ -64,5 +83,22 @@ public final class CombatUtil {
 
     public static float yawError(MinecraftClient mc, float yaw) {
         return Math.abs(MathHelper.wrapDegrees(yaw - mc.player.getYaw()));
+    }
+
+    /**
+     * Есть ли прямая видимость (без блоков) до точки центра цели.
+     * Используется в «обходах»: бить только то, что реально видно, как делает игрок.
+     */
+    public static boolean hasLineOfSight(MinecraftClient mc, Entity e) {
+        try {
+            Vec3d eye = mc.player.getEyePos();
+            Vec3d target = new Vec3d(e.getX(), e.getY() + e.getHeight() * 0.6, e.getZ());
+            return mc.world.raycast(new net.minecraft.world.RaycastContext(
+                    eye, target, net.minecraft.world.RaycastContext.ShapeType.COLLIDER,
+                    net.minecraft.world.RaycastContext.FluidHandling.NONE, mc.player)).getType()
+                    == net.minecraft.util.hit.HitResult.Type.MISS;
+        } catch (Throwable t) {
+            return mc.player.canSee(e);
+        }
     }
 }

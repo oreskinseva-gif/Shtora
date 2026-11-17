@@ -24,33 +24,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Scaffold extends Module {
-    public final ModeSetting mode = add(new ModeSetting("Mode", "Normal", "Ninja", "Telly", "GodBridge"));
-    public final ModeSetting bypass = add(new ModeSetting("Bypass", "None", "Grim", "NCP", "Vulcan", "Matrix", "Verus"));
-    public final ModeSetting towerMode = add(new ModeSetting("Tower", "Vanilla", "NCP", "Motion", "None"));
-    public final ModeSetting sprintMode = add(new ModeSetting("Sprint", "Allow", "Off", "Bypass"));
-    public final ModeSetting swingMode = add(new ModeSetting("Swing", "Client", "None"));
+    public final ModeSetting mode = add(new ModeSetting("Mode", "Normal", "Ninja", "Telly"));
     public final NumberSetting cps = add(new NumberSetting("CPS", 12, 1, 20, 1));
-    public final NumberSetting expand = add(new NumberSetting("Expand", 0, 0, 6, 1));
+    public final NumberSetting expand = add(new NumberSetting("Expand", 0, 0, 4, 1));
     public final NumberSetting turn = add(new NumberSetting("Turn speed", 60, 10, 180, 5));
     public final NumberSetting smoothness = add(new NumberSetting("Smoothness", 0.4, 0.1, 1.0, 0.05));
     public final BoolSetting rotate = add(new BoolSetting("Rotate", true));
     public final BoolSetting silent = add(new BoolSetting("Silent", true));
-    public final BoolSetting keepY = add(new BoolSetting("KeepY", false));
-    public final BoolSetting safeWalk = add(new BoolSetting("SafeWalk", false));
-    public final BoolSetting downwards = add(new BoolSetting("Downwards", false));
+    public final BoolSetting tower = add(new BoolSetting("Tower", true));
     public final BoolSetting switchBack = add(new BoolSetting("Switch back", true));
-    public final BoolSetting raytrace = add(new BoolSetting("Raytrace", true));
 
     private static class Plan { BlockPos nb; Direction face; Vec3d hit; }
 
+    /** Сколько тиков держим угол после последней постановки, прежде чем плавно вернуть камеру. */
     private static final int HOLD = 14;
 
     private int prevSlot = -1, idle;
     private double credit;
     private boolean active, hasTarget;
     private float sy, sp, tYaw, tPitch;
-    private double keepYLevel = -1;
-    private int towerTicks;
 
     public Scaffold() { super("Scaffold", Category.PLAYER); }
 
@@ -58,13 +50,11 @@ public class Scaffold extends Module {
 
     @Override
     public void onEnable(MinecraftClient mc) {
-        prevSlot = mc.player != null ? mc.player.getInventory().selectedSlot : -1;
+        prevSlot = mc.player.getInventory().selectedSlot;
         credit = 1.0;
         active = false;
         hasTarget = false;
         idle = 0;
-        keepYLevel = mc.player != null ? Math.floor(mc.player.getY() - 1.0) : -1;
-        towerTicks = 0;
     }
 
     @Override
@@ -73,30 +63,19 @@ public class Scaffold extends Module {
         active = false;
         hasTarget = false;
         if (mode.is("Ninja")) mc.options.sneakKey.setPressed(false);
-        if (switchBack.get() && prevSlot >= 0 && mc.player != null) mc.player.getInventory().selectedSlot = prevSlot;
+        if (switchBack.get() && prevSlot >= 0) mc.player.getInventory().selectedSlot = prevSlot;
         prevSlot = -1;
-        keepYLevel = -1;
     }
-
-    private boolean grimLike() { return bypass.is("Grim"); }
 
     @Override
     public void onTick(MinecraftClient mc) {
-        if (mc.player == null || mc.world == null || mc.currentScreen != null || mc.interactionManager == null) return;
+        if (mc.currentScreen != null || mc.interactionManager == null) return;
         credit = Math.min(2.0, credit + cps.get() / 20.0);
 
         int slot = findBlockSlot(mc);
-        boolean ninja = mode.is("Ninja"), telly = mode.is("Telly"), god = mode.is("GodBridge");
+        boolean ninja = mode.is("Ninja"), telly = mode.is("Telly");
         boolean moving = mc.options.forwardKey.isPressed() || mc.options.backKey.isPressed()
                 || mc.options.leftKey.isPressed() || mc.options.rightKey.isPressed();
-
-        if (!moving && keepY.get() && mc.player.isOnGround()) keepYLevel = Math.floor(mc.player.getY() - 1.0);
-
-        if (sprintMode.is("Off") || (sprintMode.is("Bypass") && (grimLike() || bypass.is("Vulcan")))) {
-            mc.player.setSprinting(false);
-        } else if (god || telly) {
-            if (moving) mc.player.setSprinting(true);
-        }
 
         List<Plan> plans = new ArrayList<>();
         Plan plan = null;
@@ -107,31 +86,23 @@ public class Scaffold extends Module {
 
             if (telly && moving) {
                 if (mc.player.isOnGround()) mc.player.jump();
+                mc.player.setSprinting(true);
             }
-            if (ninja || safeWalk.get()) {
+            if (ninja) {
                 boolean edge = moving && mc.player.isOnGround()
-                        && mc.world.getBlockState(BlockPos.ofFloored(px + dx * 0.35, py - 1, pz + dz * 0.35)).isReplaceable();
-                if (ninja || safeWalk.get()) mc.options.sneakKey.setPressed(edge);
-            } else if (!mc.options.sneakKey.isPressed()) {
-                mc.options.sneakKey.setPressed(false);
+                        && mc.world.getBlockState(BlockPos.ofFloored(px + dx * 0.4, py - 1, pz + dz * 0.4)).isReplaceable();
+                mc.options.sneakKey.setPressed(edge);
             }
 
             int[] offsets;
             if (ninja) offsets = new int[]{1, 0};
             else if (telly) offsets = new int[]{0};
             else {
-                int ex = (int) expand.get();
-                if (grimLike()) ex = Math.min(ex, 1);
-                offsets = new int[ex + 1];
+                offsets = new int[(int) expand.get() + 1];
                 for (int i = 0; i < offsets.length; i++) offsets[i] = i;
             }
-
-            double baseY = py - 1;
-            if (keepY.get() && keepYLevel > -1000 && moving) baseY = keepYLevel;
-            if (downwards.get() && mc.options.sneakKey.isPressed()) baseY = py - 2;
-
             for (int i : offsets) {
-                BlockPos pos = BlockPos.ofFloored(px + dx * i, baseY, pz + dz * i);
+                BlockPos pos = BlockPos.ofFloored(px + dx * i, py - 1, pz + dz * i);
                 if (!mc.world.getBlockState(pos).isReplaceable()) continue;
                 plans = makePlans(mc, pos);
                 if (!plans.isEmpty()) { plan = plans.get(0); break; }
@@ -143,14 +114,15 @@ public class Scaffold extends Module {
             if (rotate.get()) {
                 float[] r = CombatUtil.rotationTo(mc, plan.hit);
                 tYaw = r[0];
-                tPitch = bypass.is("Grim") ? Math.max(r[1], 80f) : r[1];
-                if (god) tPitch = Math.max(tPitch, 75f);
+                tPitch = r[1];
                 hasTarget = true;
             }
         } else {
             idle++;
         }
 
+        // Поворот зациклен: пока мы строим, угол держится и плавно подстраивается под
+        // следующий блок, а не возвращается к камере после каждой постановки.
         boolean aimed = true;
         if (rotate.get()) {
             if (hasTarget && idle <= HOLD) aimed = aim(mc);
@@ -160,55 +132,37 @@ public class Scaffold extends Module {
         if (plan == null || !aimed || credit < 1.0) return;
 
         mc.player.getInventory().selectedSlot = slot;
+        // если первая грань не приняла блок, пробуем остальные в этот же тик
         for (Plan p : plans) {
-            if (raytrace.get()) {
-                // простая проверка дистанции/валидности уже есть в makePlans
-            }
             ActionResult res = mc.interactionManager.interactBlock(mc.player, Hand.MAIN_HAND,
                     new BlockHitResult(p.hit, p.face, p.nb, false));
             if (!res.isAccepted()) continue;
-            if (!swingMode.is("None")) mc.player.swingHand(Hand.MAIN_HAND);
+            mc.player.swingHand(Hand.MAIN_HAND);
             credit -= 1.0;
-            handleTower(mc, moving, telly);
+            if (tower.get() && !telly && mc.options.jumpKey.isPressed() && !moving) {
+                Vec3d v = mc.player.getVelocity();
+                mc.player.setVelocity(v.x, 0.42, v.z);
+            }
             break;
         }
     }
 
-    private void handleTower(MinecraftClient mc, boolean moving, boolean telly) {
-        if (moving || telly || towerMode.is("None")) { towerTicks = 0; return; }
-        if (!mc.options.jumpKey.isPressed()) { towerTicks = 0; return; }
-        Vec3d v = mc.player.getVelocity();
-        switch (towerMode.get()) {
-            case "NCP":
-                if (mc.player.isOnGround()) { mc.player.setVelocity(v.x, 0.42, v.z); towerTicks = 0; }
-                else if (towerTicks == 1) mc.player.setVelocity(v.x, 0.33, v.z);
-                towerTicks++;
-                break;
-            case "Motion":
-                mc.player.setVelocity(v.x, 0.42, v.z);
-                break;
-            default:
-                if (mc.player.isOnGround()) mc.player.setVelocity(v.x, 0.42, v.z);
-                break;
-        }
-    }
-
+    /** Плавное наведение к целевому углу (экспоненциальное сглаживание + ограничение скорости). */
     private boolean aim(MinecraftClient mc) {
         float k = (float) smoothness.get();
         float cap = (float) turn.get();
-        if (bypass.is("Grim") || bypass.is("Matrix")) { k = Math.max(k, 0.55f); cap = Math.min(cap, 80f); }
-        if (silent.get() && !bypass.is("Grim")) {
+        if (silent.get()) {
             if (!active) { sy = mc.player.getYaw(); sp = mc.player.getPitch(); active = true; }
             sy += MathHelper.clamp(MathHelper.wrapDegrees(tYaw - sy) * k, -cap, cap);
             sp = MathHelper.clamp(sp + MathHelper.clamp((tPitch - sp) * k, -cap, cap), -90f, 90f);
             Rotations.sendSilent(mc, sy, sp);
             return Math.abs(MathHelper.wrapDegrees(tYaw - sy)) < 40f && Math.abs(tPitch - sp) < 45f;
         }
-        if (active && silent.get()) { Rotations.restore(mc); active = false; }
         CombatUtil.rotateToward(mc, tYaw, tPitch, Math.max(2f, cap * k));
         return CombatUtil.yawError(mc, tYaw) < 40f && Math.abs(tPitch - mc.player.getPitch()) < 45f;
     }
 
+    /** Плавно вернуть модель к реальному углу камеры, когда строить больше нечего. */
     private void relax(MinecraftClient mc) {
         if (!active) { hasTarget = false; return; }
         float k = (float) smoothness.get();
@@ -234,7 +188,7 @@ public class Scaffold extends Module {
             Vec3d hit = new Vec3d(nb.getX() + 0.5 + face.getOffsetX() * 0.5,
                     nb.getY() + 0.5 + face.getOffsetY() * 0.5,
                     nb.getZ() + 0.5 + face.getOffsetZ() * 0.5);
-            if (eye.distanceTo(hit) > 4.5) continue;
+            if (eye.distanceTo(hit) > 4.3) continue;
             Plan p = new Plan();
             p.nb = nb; p.face = face; p.hit = hit;
             out.add(p);
