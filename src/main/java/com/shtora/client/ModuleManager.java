@@ -12,7 +12,8 @@ public class ModuleManager {
 
     public static Interface ui;
     public static KillAura killAura;
-    public static AntiBot antiBot;
+    public static AutoMace autoMace;
+    public static TargetEsp targetEsp;
     public static Esp esp;
     public static Scaffold scaffold;
     public static Tracers tracers;
@@ -29,7 +30,8 @@ public class ModuleManager {
     public static void init() {
         ui = new Interface();
         killAura = new KillAura();
-        antiBot = new AntiBot();
+        autoMace = new AutoMace();
+        targetEsp = new TargetEsp();
         esp = new Esp();
         scaffold = new Scaffold();
         tracers = new Tracers();
@@ -56,7 +58,7 @@ public class ModuleManager {
 
         // Combat
         modules.add(killAura);
-        modules.add(antiBot);
+        modules.add(autoMace);
         modules.add(new AimAssist());
         modules.add(new TriggerBot());
         modules.add(new Velocity());
@@ -74,6 +76,7 @@ public class ModuleManager {
         modules.add(new NoWeather());
         modules.add(new ShowHitboxes());
         modules.add(esp);
+        modules.add(targetEsp);
         modules.add(tracers);
         modules.add(nameTags);
         modules.add(blockHighlight);
@@ -110,7 +113,8 @@ public class ModuleManager {
     private static String describe(String name) {
         switch (name) {
             case "KillAura": return "Attack players automatically";
-            case "AntiBot": return "Ignore NPC / fake players";
+            case "AutoMace": return "Auto switch to mace and smash";
+            case "TargetESP": return "Highlight your current target";
             case "AimAssist": return "Aim at targets smoothly";
             case "TriggerBot": return "Attack on crosshair";
             case "Velocity": return "Reduce knockback";

@@ -84,11 +84,14 @@ public class ShtoraClient implements ClientModInitializer {
         } catch (Throwable ignored) {}
     }
 
-    /** Клавиша из настроек Interface открывает меню (по умолчанию — правый Shift). */
+    /** Клавиша открытия меню берётся из Interface → Menu key. */
     private static void menuKey(MinecraftClient mc) {
         if (mc.currentScreen != null) { menuWasDown = true; return; }
-        int key = ModuleManager.ui == null ? GLFW.GLFW_KEY_RIGHT_SHIFT : ModuleManager.ui.menuKey.get();
-        if (key <= 0) { menuWasDown = false; return; }
+        int key = GLFW.GLFW_KEY_RIGHT_SHIFT;
+        try {
+            if (ModuleManager.ui != null) key = ModuleManager.ui.menuKey.get();
+        } catch (Throwable ignored) {}
+        if (key <= 0) key = GLFW.GLFW_KEY_RIGHT_SHIFT;
         boolean down = InputUtil.isKeyPressed(mc.getWindow().getHandle(), key);
         if (down && !menuWasDown) mc.setScreen(new ClickGuiScreen());
         menuWasDown = down;

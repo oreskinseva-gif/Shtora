@@ -4,7 +4,6 @@ import com.shtora.client.Category;
 import com.shtora.client.Module;
 import com.shtora.client.ModuleManager;
 import com.shtora.client.setting.BoolSetting;
-import com.shtora.client.setting.ColorSetting;
 import com.shtora.client.setting.KeybindSetting;
 import com.shtora.client.setting.ModeSetting;
 import com.shtora.client.setting.NumberSetting;
@@ -30,7 +29,7 @@ import java.util.Set;
 /**
  * Меню клиента — по образцу (см. ВОТ MENU.jpg).
  *
- * Вид: чисто чёрный фон, скруглённые тёмные карточки-категории, лавандовый
+ * Вид: чисто чёрный фон, скруглённые тёмные карточки-категории, СИНИЙ
  * акцент, переключатели-пилюли, сверху по центру готический логотип SHTORA,
  * снизу — поле поиска и квадратики выбора акцентного цвета. Панель Client
  * подсвечена янтарным, как «Server modules» в макете.
@@ -54,8 +53,8 @@ public class ClickGuiScreen extends Screen {
     private static final int RAD = 6;         // скругление карточек
 
     // ------------------------------------------------------------------ акценты
-    private static final int[] SWATCH = {0xFF5867, 0xC8A3FE, 0xFFA738, 0xF853D5, 0x5EDE79, 0x915EF7};
-    private static final float[] SWATCH_HUE = {355f, 265f, 36f, 318f, 133f, 262f};
+    private static final int[] SWATCH = {0xFF5867, 0x2E86FF, 0xFFA738, 0xF853D5, 0x5EDE79, 0x915EF7};
+    private static final float[] SWATCH_HUE = {355f, 210f, 36f, 318f, 133f, 262f};
 
     // ------------------------------------------------------------------ состояние
     private static final List<Category> ORDER = new ArrayList<>(List.of(Category.values()));
@@ -95,8 +94,6 @@ public class ClickGuiScreen extends Screen {
     private float moved;
     private boolean pressBg;
     private NumberSetting dragSlider;
-    private ColorSetting dragColor;
-    private boolean dragHue;
     /** Настройка-клавиша, ожидающая нажатия. */
     private KeybindSetting listening;
 
@@ -526,7 +523,6 @@ public class ClickGuiScreen extends Screen {
 
     private static int settingH(TextRenderer tr, Setting s, int w) {
         if (s instanceof NumberSetting) return 23;
-        if (s instanceof ColorSetting) return 30;
         if (s instanceof KeybindSetting) return 20;
         if (s instanceof ModeSetting mo) return 13 + modeRows(tr, mo, w - 8) * 13 + 1;
         return 15;
@@ -565,8 +561,6 @@ public class ClickGuiScreen extends Screen {
                 int fw = Math.max(1, Math.round(n.anim.v * sw));
                 Draw.rrect(ctx, sx, sy, fw, 3, 1, Draw.argb(acc, ea));
                 Draw.rrect(ctx, sx + fw - 3, sy - 2, 6, 6, 3, Draw.argb(acc, ea));
-            } else if (s instanceof ColorSetting cs) {
-                drawColor(ctx, tr, cs, innerX, ry, innerW, ea, aspd, dt);
             } else if (s instanceof KeybindSetting ks) {
                 drawKeybind(ctx, tr, ks, innerX, ry, innerW, ea, acc, aspd, dt);
             } else if (s instanceof ModeSetting mo) {
@@ -587,33 +581,6 @@ public class ClickGuiScreen extends Screen {
             }
             ry += sh;
         }
-    }
-
-    // ------------------------------------------------------------------ цвет
-    private void drawColor(DrawContext ctx, TextRenderer tr, ColorSetting cs, int x, int y, int w,
-                           float ea, float aspd, float dt) {
-        cs.animH.to(cs.fracH(), 22f * aspd, dt);
-        cs.animB.to(cs.fracB(), 22f * aspd, dt);
-        Draw.text(ctx, tr, Draw.trim(tr, cs.name, w - 34), x + 4, y + 2, Theme.TEXT, ea);
-        int sw = 10, sx = x + w - sw - 4, sy = y + 1;
-        Draw.rrect(ctx, sx, sy, sw, sw, 3, Draw.argb(cs.rgb(), ea));
-        Draw.outline(ctx, sx, sy, sw, sw, 3, Draw.argb(Theme.BORDER, ea));
-
-        int bx = x + 4, bw = w - 8, bh = 5;
-        int hy = y + 13;
-        int n = Math.max(8, Math.min(40, bw / 3));
-        for (int i = 0; i < n; i++) {
-            int x0 = bx + i * bw / n, x1 = bx + (i + 1) * bw / n;
-            ctx.fill(x0, hy, x1, hy + bh, Draw.argb(Draw.hsb(i / (float) (n - 1), 0.72f, 1f), ea));
-        }
-        int hx = bx + Math.round(cs.animH.v * (bw - 3));
-        Draw.rrect(ctx, hx, hy - 1, 3, bh + 2, 1, Draw.argb(0xFFFFFF, ea));
-
-        int by = y + 21;
-        Draw.hgrad(ctx, bx, by, bw, bh, 0x000000, Draw.hsb(cs.fracH(), 0.72f, 1f), ea);
-        Draw.outline(ctx, bx, by, bw, bh, 1, Draw.argb(Theme.BORDER, ea));
-        int bxm = bx + Math.round(cs.animB.v * (bw - 3));
-        Draw.rrect(ctx, bxm, by - 1, 3, bh + 2, 1, Draw.argb(0xFFFFFF, ea));
     }
 
     // ------------------------------------------------------------------ клавиша
@@ -834,12 +801,6 @@ public class ClickGuiScreen extends Screen {
         s.set(Math.round(raw / s.step) * s.step);
     }
 
-    private void setColor(ColorSetting cs, double mx, boolean hue) {
-        double f = Math.max(0.0, Math.min(1.0, (mx - (cs.ux + 4)) / (double) Math.max(1, cs.uw - 8)));
-        if (hue) cs.setHue(f * 360.0);
-        else cs.setBright(ColorSetting.MIN_B + f * (ColorSetting.MAX_B - ColorSetting.MIN_B));
-    }
-
     /** Переводит в режим ожидания только одну настройку-клавишу. */
     private void setListening(KeybindSetting ks) {
         for (Module m : ModuleManager.modules)
@@ -923,12 +884,6 @@ public class ClickGuiScreen extends Screen {
                 if (!in(mx, my, s.ux, s.uy, s.uw, s.uh)) continue;
                 if (s instanceof NumberSetting n) { dragSlider = n; setSlider(n, mx); return true; }
                 if (s instanceof BoolSetting b) { b.toggle(); return true; }
-                if (s instanceof ColorSetting cs) {
-                    int bx = s.ux + 4, bw = s.uw - 8;
-                    if (in(mx, my, bx, s.uy + 12, bw, 7)) { dragColor = cs; dragHue = true; setColor(cs, mx, true); return true; }
-                    if (in(mx, my, bx, s.uy + 20, bw, 7)) { dragColor = cs; dragHue = false; setColor(cs, mx, false); return true; }
-                    return true;
-                }
                 if (s instanceof KeybindSetting ks) { setListening(ks); return true; }
             }
         }
@@ -983,7 +938,6 @@ public class ClickGuiScreen extends Screen {
     public boolean mouseDragged(double smx, double smy, int button, double dx, double dy) {
         double mx = smx;
         if (dragSlider != null) { setSlider(dragSlider, mx); return true; }
-        if (dragColor != null) { setColor(dragColor, mx, dragHue); return true; }
         if (pressBg) {
             moved += (float) (Math.abs(dx) + Math.abs(dy));
             scrollTarget = Math.max(0f, Math.min(maxScroll, scrollTarget - (float) dy));
@@ -994,7 +948,6 @@ public class ClickGuiScreen extends Screen {
     @Override
     public boolean mouseReleased(double mx, double my, int button) {
         if (dragSlider != null) { dragSlider = null; return true; }
-        if (dragColor != null) { dragColor = null; return true; }
         if (pressBg && moved < 6) {
             if (searching) stopSearch();
         }

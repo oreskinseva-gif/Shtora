@@ -41,7 +41,7 @@ public class Hitbox extends Module {
     public void onTick(MinecraftClient mc) {
         double s = size.get();
         for (Entity e : mc.world.getEntities()) {
-            if (!CombatUtil.isValidTarget(mc, e, players.get(), mobs.get(), false)) continue;
+            if (!CombatUtil.isValid(mc, e, players.get(), mobs.get(), false)) continue;
             e.setBoundingBox(base(e).expand(s, s * 0.5, s));
         }
 
@@ -52,7 +52,7 @@ public class Hitbox extends Module {
 
         HitResult hit = mc.crosshairTarget;
         Entity e = (hit != null && hit.getType() == HitResult.Type.ENTITY) ? ((EntityHitResult) hit).getEntity() : null;
-        if (e == null || !CombatUtil.isValidTarget(mc, e, players.get(), mobs.get(), false)) { relax(mc); return; }
+        if (e == null || !CombatUtil.isValid(mc, e, players.get(), mobs.get(), false)) { relax(mc); return; }
 
         Box real = base(e);
         Vec3d eye = mc.player.getEyePos();

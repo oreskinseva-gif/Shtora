@@ -13,37 +13,7 @@ public final class Draw {
 
     public static float ease(float x) { float t = 1f - clamp(x); return 1f - t * t * t; }
 
-    /** Плавное ускорение-замедление (для интро и переходов). */
-    public static float easeInOutCubic(float x) {
-        x = clamp(x);
-        return x < 0.5f ? 4f * x * x * x : 1f - (float) Math.pow(-2f * x + 2f, 3) / 2f;
-    }
-
-    /** Очень мягкое затухание — почти всё движение в начале. */
-    public static float easeOutQuint(float x) { float t = 1f - clamp(x); return 1f - t * t * t * t * t; }
-
-    public static float easeOutExpo(float x) {
-        x = clamp(x);
-        return x >= 1f ? 1f : 1f - (float) Math.pow(2f, -10f * x);
-    }
-
-    /** С легким «перелётом» — панели и кнопки выезжают живее. */
-    public static float easeOutBack(float x) {
-        x = clamp(x);
-        float c1 = 1.70158f, c3 = c1 + 1f, t = x - 1f;
-        return 1f + c3 * t * t * t + c1 * t * t;
-    }
-
-    /** Упругое покачивание в конце — для появления логотипа. */
-    public static float easeOutElastic(float x) {
-        x = clamp(x);
-        if (x <= 0f) return 0f;
-        if (x >= 1f) return 1f;
-        float c4 = (float) (2.0 * Math.PI / 3.0);
-        return (float) (Math.pow(2f, -10f * x) * Math.sin((x * 10f - 0.75f) * c4) + 1f);
-    }
-
-    /** Сглаживание 0..1 (smoothstep). */
+    /** Плавная S-кривая (smoothstep): мягкий старт и финиш. */
     public static float smooth(float x) { x = clamp(x); return x * x * (3f - 2f * x); }
 
     public static int argb(int rgb, float a) {

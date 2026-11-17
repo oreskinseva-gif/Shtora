@@ -209,15 +209,6 @@ public class ShtoraTitleScreen extends Screen {
         int lx = Math.max(8, (sw - totalW) / 2);
         int ly = Math.max(7, Math.round(sh * 0.05f));
 
-        // логотип появляется с лёгким «перелётом»
-        float la = Draw.easeOutBack(Draw.clamp(a / 0.6f));
-        var mat = ctx.getMatrices();
-        mat.push();
-        float lcx = lx + totalW / 2f, lcy = ly + lh / 2f;
-        float ls = 0.80f + 0.20f * la;
-        mat.translate(lcx, lcy, 0f);
-        mat.scale(ls, ls, 1f);
-        mat.translate(-lcx, -lcy, 0f);
         Draw.glow(ctx, lx - 3, ly - 3, lw + 6, lh + 6, 7, acc, a * 0.45f);
         Logo.body(ctx, lx, ly, lw, lh, Draw.mix(acc, 0xFFFFFF, 0.28f), a);
         int ty = ly + (lh - wlh) / 2;
@@ -227,7 +218,6 @@ public class ShtoraTitleScreen extends Screen {
         } else {
             Draw.gothic(ctx, tr, "SHTORA", lx + lw + gap, ty + (wlh - 9) / 2, Theme.TEXT, a);
         }
-        mat.pop();
 
         // слоган
         String slogan = "ВАШ МИР. ВАШИ ПРАВИЛА.";
@@ -275,11 +265,7 @@ public class ShtoraTitleScreen extends Screen {
         for (int i = 0; i < BTN; i++) {
             btnAnim[i].to(i == hoverBtn ? 1f : 0f, 16f, delta);
             String label = bw < 190 ? btnLabelShort[i] : btnLabel[i];
-            // кнопки появляются каскадом снизу вверх
-            float ap = Draw.clamp((a - i * 0.05f) / 0.5f);
-            float ov = Draw.easeOutBack(ap);
-            drawButton(ctx, tr, btnX[i], btnY[i] + Math.round((1f - ov) * 10f), bw, bh, label,
-                    btnAnim[i].v, a * ap, acc);
+            drawButton(ctx, tr, btnX[i], btnY[i], bw, bh, label, btnAnim[i].v, a, acc);
         }
 
         // низ: версия слева, папка ресурсов справа

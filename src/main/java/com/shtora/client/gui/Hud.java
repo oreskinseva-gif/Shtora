@@ -45,6 +45,7 @@ public class Hud {
 
         // 2D-оверлеи поверх мира
         if (ModuleManager.esp.isEnabled() && ModuleManager.esp.mode.is("2D Box")) safe(ModuleManager.esp, () -> ModuleManager.esp.render2d(ctx));
+        if (ModuleManager.targetEsp.isEnabled()) safe(ModuleManager.targetEsp, () -> ModuleManager.targetEsp.render2d(ctx));
         if (ModuleManager.tracers.isEnabled()) safe(ModuleManager.tracers, () -> ModuleManager.tracers.render2d(ctx));
         if (ModuleManager.nameTags.isEnabled()) safe(ModuleManager.nameTags, () -> ModuleManager.nameTags.render2d(ctx));
 

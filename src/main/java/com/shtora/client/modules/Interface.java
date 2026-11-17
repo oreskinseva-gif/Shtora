@@ -12,11 +12,10 @@ public class Interface extends Module {
     public final BoolSetting arrayList = add(new BoolSetting("Module list", true));
     public final BoolSetting blur = add(new BoolSetting("Blur", true));
     public final NumberSetting glass = add(new NumberSetting("Opacity", 0.88, 0.2, 0.9, 0.05));
-    public final NumberSetting hue = add(new NumberSetting("Accent", 265, 0, 360, 1));
-    /** Клавиша, которой открывается меню клиента (можно поменять на свою). */
+    public final NumberSetting hue = add(new NumberSetting("Accent", 210, 0, 360, 1));
     public final KeybindSetting menuKey = add(new KeybindSetting("Menu key", GLFW.GLFW_KEY_RIGHT_SHIFT));
     /** Общая скорость анимаций меню (чем больше — тем резвее, но всё так же плавно). */
-    public final NumberSetting animSpeed = add(new NumberSetting("Anim speed", 1.0, 0.5, 2.5, 0.1));
+    public final NumberSetting animSpeed = add(new NumberSetting("Anim speed", 1.0, 0.4, 2.5, 0.1));
 
     public Interface() {
         super("Interface", Category.CLIENT);

@@ -8,7 +8,6 @@ import com.shtora.client.util.CombatUtil;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class AimAssist extends Module {
     public final NumberSetting range = add(new NumberSetting("Range", 4.5, 2.0, 6.0, 0.1));
@@ -17,8 +16,6 @@ public class AimAssist extends Module {
     public final BoolSetting players = add(new BoolSetting("Players", true));
     public final BoolSetting mobs = add(new BoolSetting("Mobs", false));
     public final BoolSetting onClick = add(new BoolSetting("Only on click", true));
-    public final BoolSetting visible = add(new BoolSetting("Visible only", true));
-    public final BoolSetting randomize = add(new BoolSetting("Randomize", true));
 
     public AimAssist() { super("AimAssist", Category.COMBAT); }
 
@@ -27,20 +24,13 @@ public class AimAssist extends Module {
     public void onFrame(MinecraftClient mc, float dt) {
         if (mc.currentScreen != null) return;
         if (onClick.get() && !mc.options.attackKey.isPressed()) return;
-        // AntiBot включён всегда: при выключенном модуле AntiBot фильтр просто не срабатывает
         LivingEntity t = CombatUtil.findTarget(mc, range.get(), (float) fov.get(),
-                players.get(), mobs.get(), false, !visible.get(), true);
+                players.get(), mobs.get(), false, false);
         if (t == null) return;
 
         float[] r = CombatUtil.rotationTo(mc, t);
-        float ty = r[0], tp = r[1];
-        if (randomize.get()) {
-            ThreadLocalRandom rr = ThreadLocalRandom.current();
-            ty += (rr.nextFloat() - 0.5f) * 0.6f;
-            tp += (rr.nextFloat() - 0.5f) * 0.4f;
-        }
-        float dyaw = MathHelper.wrapDegrees(ty - mc.player.getYaw());
-        float dpitch = tp - mc.player.getPitch();
+        float dyaw = MathHelper.wrapDegrees(r[0] - mc.player.getYaw());
+        float dpitch = r[1] - mc.player.getPitch();
         if (Math.abs(dyaw) < 0.25f && Math.abs(dpitch) < 0.25f) return;
 
         // экспоненциальное сглаживание: быстро в начале, мягко у цели
