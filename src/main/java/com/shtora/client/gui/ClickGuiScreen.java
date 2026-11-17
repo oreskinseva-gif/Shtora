@@ -11,6 +11,7 @@ import com.shtora.client.setting.Setting;
 import com.shtora.client.util.Anim;
 import com.shtora.client.util.ConfigManager;
 import com.shtora.client.util.Draw;
+import com.shtora.client.util.Keybinds;
 import com.shtora.client.util.Logo;
 import com.shtora.client.util.Theme;
 import net.minecraft.client.font.TextRenderer;
@@ -124,6 +125,7 @@ public class ClickGuiScreen extends Screen {
             listening.set(keyCode == GLFW.GLFW_KEY_ESCAPE ? 0 : keyCode);
             listening.listening = false;
             listening = null;
+            Keybinds.pushAll();
             return true;
         }
         if (cfgOpen) {

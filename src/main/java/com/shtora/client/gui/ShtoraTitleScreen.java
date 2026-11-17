@@ -220,7 +220,7 @@ public class ShtoraTitleScreen extends Screen {
         }
 
         // слоган
-        String slogan = "ВАШ МИР. ВАШИ ПРАВИЛА.";
+        String slogan = "Shtora client free!";
         Draw.text(ctx, tr, slogan, (sw - Draw.w(tr, slogan)) / 2, ly + lh + 6, Theme.TEXT_DIM, a * 0.85f);
 
         // ник справа сверху (если хватает места)

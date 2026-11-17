@@ -1,5 +1,6 @@
 package com.shtora.client;
 
+import com.shtora.client.setting.KeybindSetting;
 import com.shtora.client.setting.Setting;
 import com.shtora.client.util.Anim;
 import net.minecraft.client.MinecraftClient;
@@ -10,6 +11,8 @@ public abstract class Module {
     public final String name;
     public final Category category;
     public final List<Setting> settings = new ArrayList<>();
+    /** Клавиша быстрого включения/выключения модуля (одна и та же в меню и в «Управлении»). */
+    public final KeybindSetting bind;
     /** Короткая подпись под названием модуля (показывается в меню). */
     public String description = "";
     private boolean enabled;
@@ -22,6 +25,8 @@ public abstract class Module {
     protected Module(String name, Category category) {
         this.name = name;
         this.category = category;
+        // у служебных модулей (Interface) своей клавиши нет
+        this.bind = category == Category.CLIENT ? null : add(new KeybindSetting("Bind", 0));
     }
 
     protected <T extends Setting> T add(T s) { settings.add(s); return s; }

@@ -3,6 +3,7 @@ package com.shtora.client;
 import com.shtora.client.gui.ClickGuiScreen;
 import com.shtora.client.gui.FogOverlay;
 import com.shtora.client.gui.Hud;
+import com.shtora.client.util.Keybinds;
 import com.shtora.client.util.Projection;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -22,6 +23,7 @@ public class ShtoraClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         ModuleManager.init();
+        Keybinds.init();
 
         // экранный диктор клиенту не нужен: держим его выключенным
         ClientTickEvents.START_CLIENT_TICK.register(ShtoraClient::silenceNarrator);
@@ -29,6 +31,7 @@ public class ShtoraClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(mc -> {
             if (mc.player == null || mc.world == null) return;
             try { Projection.tick(mc); } catch (Throwable ignored) {}
+            try { Keybinds.tick(mc); } catch (Throwable ignored) {}
             menuKey(mc);
             // каждый модуль изолирован: ошибка одного не ломает остальные
             for (Module m : ModuleManager.modules) {
