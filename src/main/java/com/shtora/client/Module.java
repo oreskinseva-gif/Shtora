@@ -11,7 +11,10 @@ public abstract class Module {
     public final String name;
     public final Category category;
     public final List<Setting> settings = new ArrayList<>();
-    /** Клавиша быстрого включения/выключения модуля (одна и та же в меню и в «Управлении»). */
+    /**
+     * Клавиша быстрого включения/выключения модуля. В само меню не добавляется
+     * (меню клиента не трогаем) — меняется в «Настройки → Управление → Shtora».
+     */
     public final KeybindSetting bind;
     /** Короткая подпись под названием модуля (показывается в меню). */
     public String description = "";
@@ -26,7 +29,7 @@ public abstract class Module {
         this.name = name;
         this.category = category;
         // у служебных модулей (Interface) своей клавиши нет
-        this.bind = category == Category.CLIENT ? null : add(new KeybindSetting("Bind", 0));
+        this.bind = category == Category.CLIENT ? null : new KeybindSetting("Bind", 0);
     }
 
     protected <T extends Setting> T add(T s) { settings.add(s); return s; }
