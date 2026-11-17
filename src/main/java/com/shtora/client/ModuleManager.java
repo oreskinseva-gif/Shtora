@@ -12,6 +12,9 @@ public class ModuleManager {
 
     public static Interface ui;
     public static KillAura killAura;
+    public static AutoMace autoMace;
+    public static TargetEsp targetEsp;
+    public static Optimization optimization;
     public static Esp esp;
     public static Scaffold scaffold;
     public static Tracers tracers;
@@ -28,6 +31,9 @@ public class ModuleManager {
     public static void init() {
         ui = new Interface();
         killAura = new KillAura();
+        autoMace = new AutoMace();
+        targetEsp = new TargetEsp();
+        optimization = new Optimization();
         esp = new Esp();
         scaffold = new Scaffold();
         tracers = new Tracers();
@@ -54,6 +60,7 @@ public class ModuleManager {
 
         // Combat
         modules.add(killAura);
+        modules.add(autoMace);
         modules.add(new AimAssist());
         modules.add(new TriggerBot());
         modules.add(new Velocity());
@@ -65,12 +72,14 @@ public class ModuleManager {
         modules.add(new BHop());
         // Render
         modules.add(ui);
+        modules.add(optimization);
         modules.add(new FullBright());
         modules.add(new Zoom());
         modules.add(new TimeChanger());
         modules.add(new NoWeather());
         modules.add(new ShowHitboxes());
         modules.add(esp);
+        modules.add(targetEsp);
         modules.add(tracers);
         modules.add(nameTags);
         modules.add(blockHighlight);
@@ -107,6 +116,9 @@ public class ModuleManager {
     private static String describe(String name) {
         switch (name) {
             case "KillAura": return "Attack players automatically";
+            case "AutoMace": return "Smash attack with a mace";
+            case "TargetESP": return "Highlight your current target";
+            case "Optimization": return "FPS tweaks and less lag";
             case "AimAssist": return "Aim at targets smoothly";
             case "TriggerBot": return "Attack on crosshair";
             case "Velocity": return "Reduce knockback";
